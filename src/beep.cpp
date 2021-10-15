@@ -87,9 +87,6 @@ int execute_command(std::string command_line,
         return -1;
     }
     std::string command {command_words[0]};
-    if (command == "quit" || command == "q") {
-        close_requested = true;
-    }
     if (source != "nobody") {
         if (chat_selected == "nobody") {
             if (command == "connect") {
@@ -102,9 +99,14 @@ int execute_command(std::string command_line,
             }
         }
         else if (command.size() > 0){
-            if (command == "#close") {
-                std::cout << "[Conversation closed]\n'";
-                chat_selected = "nobody";
+            if (command[0] == '#') {
+                if (command == "#close") {
+                    std::cout << "[Conversation closed]\n'";
+                    chat_selected = "nobody";
+                }
+                if (command == "#quit") {
+                    close_requested = true;
+                }
             }
             else {
                 send_message(source, chat_selected, command_line, http_client);
@@ -120,8 +122,12 @@ int execute_command(std::string command_line,
         std::cin >> password;
         source = login(userid, password, http_client);
     }
+    if (command == "quit" || command == "q") {
+        close_requested = true;
+    }
     return 0;
 }
+
 
 int main()
 {
@@ -131,7 +137,7 @@ int main()
     std::string me {"nobody"};
     std::string command_line {};
     while (!close_requested) {
-        std::cout << "[" << me << "-->" << chat_selected << "] " << ((chat_selected == "nobody") ? "#" : "");
+        std::cout << ((chat_selected == "nobody") ? "> " : "[" + me + "-->" + chat_selected + "] ");
         getline(std::cin, command_line);
         execute_command(command_line, me, chat_selected, close_requested, http_client);
     }
